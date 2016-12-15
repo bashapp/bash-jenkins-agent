@@ -1,0 +1,32 @@
+#!/bin/bash
+
+###
+### https://wiki.jenkins-ci.org/display/JENKINS/Distributed+builds
+###
+
+URL=$1; shift
+SLAVE_NAME=$1; shift
+SLAVE_PASS=$1; shift
+
+if [[ -z "${URL}" || -z "${SLAVE_NAME}" || -z "${SLAVE_PASS}" ]]; then
+  echo "USAGE: ${SELF_HEAD} [URL] [SLAVE NAME] [SLAVE_PASS]"
+  exit 255
+fi
+
+SLAVE_JAR="${APP_HOME}/slave.jar"
+
+if [[ ! -f "${SLAVE_JAR}" ]]; then
+  # Download from http://yourserver:port/jnlpJars/slave.jar 
+  wget -O "${SLAVE_JAR}" "http://${URL}/jnlpJars/slave.jar"
+fi
+
+if [[ ! -f "${SLAVE_JAR}" ]]; then
+  echo "ERROR: FAIL TO DOWNLOAD slave.jar"
+  exit 255
+fi
+
+# java -jar slave.jar -jnlpUrl http://yourserver:port/computer/slave-name/slave-agent.jnlp
+java \
+  -jar "${SLAVE_JAR}" \
+  -jnlpUrl http://${URL}/computer/${SLAVE_NAME}/slave-agent.jnlp \
+  -secret "${SLAVE_PASS}"
